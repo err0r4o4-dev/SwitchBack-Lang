@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\SwitchBack.Config\SwitchBack.Config.csproj" />
     <ProjectReference Include="..\..\src\SwitchBack.Core\SwitchBack.Core.csproj" />
     <ProjectReference Include="..\..\src\SwitchBack.System\SwitchBack.System.csproj" />
   </ItemGroup>

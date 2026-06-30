@@ -1,11 +1,12 @@
 param(
-    [string]$Version = "0.1.0"
+    [string]$Version = "0.2.0"
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 
-& (Join-Path $PSScriptRoot "Publish-Portable.ps1")
+& (Join-Path $PSScriptRoot "Publish-Portable.ps1") -Runtime "win-x86"
+& (Join-Path $PSScriptRoot "Publish-Portable.ps1") -Runtime "win-x64"
 
 $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
 $candidates = @(

@@ -2,8 +2,8 @@
 
 ## 1. System overview
 
-SwitchBack stays in the Windows notification area. When the user selects text
-and presses the configured global hotkey, the application waits for the hotkey
+SwitchBack stays in the Windows notification area. When the user selects text,
+switches Windows to the intended target language, and presses the configured global hotkey, the application waits for the hotkey
 keys to be released, snapshots the Clipboard, sends `Ctrl+C`, converts the copied
 text by physical keyboard position, sends `Ctrl+V`, and then attempts to restore
 the original Clipboard data.
@@ -80,8 +80,15 @@ indented JSON file atomically through a temporary file:
 
 ```json
 {
+  "SchemaVersion": 2,
   "Enabled": true,
-  "ConversionMode": "Auto",
+  "UiLanguage": "System",
+  "ConversionMode": "FollowWindowsLanguage",
+  "MixedTextPolicy": "TargetLanguageOnly",
+  "InputLayouts": {
+    "LayoutAId": "<Windows-HKL-A>",
+    "LayoutBId": "<Windows-HKL-B>"
+  },
   "RestoreClipboard": true,
   "ClipboardRestoreDelayMs": 350,
   "Hotkey": {
@@ -115,7 +122,12 @@ Example: `l ; y l f u 8 i y [` maps by position to `ส ว ั ส ด ี ค 
 
 ## 11. Automatic direction
 
-`LanguageDetector` counts Thai Unicode characters and English letters. More Thai
+The default mode reads the foreground thread's active Windows keyboard layout.
+Within the configured pair, the active layout becomes the target and the other
+layout becomes the source. `WindowsLayoutCharacterMapper` uses Windows' installed
+layout tables for generic direct-keyboard conversion. IME profiles are rejected.
+
+The legacy text detector counts Thai Unicode characters and English letters. More Thai
 selects Thai→English; otherwise English→Thai. This deterministic heuristic works
 for the common wrong-layout case and avoids sending data anywhere. Mixed-language
 or punctuation-only selections can be ambiguous, so Settings also offers fixed
@@ -142,11 +154,12 @@ A normal framework-dependent build is:
 dotnet build SwitchBack.sln -c Release
 ```
 
-`scripts/Publish-Portable.ps1` performs a self-contained `win-x64` publish, so
-end users do not need to install .NET, and creates
-`artifacts/SwitchBack-win-x64-portable.zip`.
+`scripts/Publish-Portable.ps1` performs a self-contained publish, so end users
+do not need to install .NET. `scripts/Build-Installer.ps1` builds both
+`win-x86` and `win-x64` portable packages.
 
-`scripts/Build-Installer.ps1` invokes Inno Setup 6 using `installer/SwitchBack.iss`.
+The same script invokes Inno Setup using `installer/SwitchBack.iss` and creates
+one installer that selects x86/x64 files automatically.
 The per-user installer writes to `%LOCALAPPDATA%\Programs\SwitchBack`, creates an
 uninstaller, and does not request elevation.
 
@@ -156,8 +169,8 @@ The workflow `.github/workflows/release.yml` runs tests, publishes the portable
 build, compiles the installer, and creates a release when a `v*` tag is pushed:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 Before a public release, add a custom icon, code-sign the executable/installer,

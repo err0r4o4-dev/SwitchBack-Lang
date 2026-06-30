@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SwitchBack.Config\SwitchBack.Config.csproj" />
+    <ProjectReference Include="..\SwitchBack.Core\SwitchBack.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
