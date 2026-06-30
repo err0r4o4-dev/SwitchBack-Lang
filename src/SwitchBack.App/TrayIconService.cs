@@ -6,24 +6,28 @@ namespace SwitchBack.App;
 public sealed class TrayIconService : IDisposable
 {
     private readonly Forms.NotifyIcon _notifyIcon;
+    private readonly Forms.ToolStripMenuItem _settingsItem;
     private readonly Forms.ToolStripMenuItem _enabledItem;
+    private readonly Forms.ToolStripMenuItem _exitItem;
+    private readonly LocalizationService _localization;
 
-    public TrayIconService()
+    public TrayIconService(LocalizationService localization)
     {
-        _enabledItem = new Forms.ToolStripMenuItem("Enabled");
+        _localization = localization;
+        _enabledItem = new Forms.ToolStripMenuItem();
         _enabledItem.Click += (_, _) => EnabledToggleRequested?.Invoke(this, EventArgs.Empty);
 
-        var settingsItem = new Forms.ToolStripMenuItem("Settings");
-        settingsItem.Click += (_, _) => ShowSettingsRequested?.Invoke(this, EventArgs.Empty);
+        _settingsItem = new Forms.ToolStripMenuItem();
+        _settingsItem.Click += (_, _) => ShowSettingsRequested?.Invoke(this, EventArgs.Empty);
 
-        var exitItem = new Forms.ToolStripMenuItem("Exit");
-        exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
+        _exitItem = new Forms.ToolStripMenuItem();
+        _exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
 
         var contextMenu = new Forms.ContextMenuStrip();
-        contextMenu.Items.Add(settingsItem);
+        contextMenu.Items.Add(_settingsItem);
         contextMenu.Items.Add(_enabledItem);
         contextMenu.Items.Add(new Forms.ToolStripSeparator());
-        contextMenu.Items.Add(exitItem);
+        contextMenu.Items.Add(_exitItem);
 
         _notifyIcon = new Forms.NotifyIcon
         {
@@ -34,6 +38,7 @@ public sealed class TrayIconService : IDisposable
         };
 
         _notifyIcon.DoubleClick += (_, _) => ShowSettingsRequested?.Invoke(this, EventArgs.Empty);
+        ApplyLocalization();
     }
 
     public event EventHandler? ShowSettingsRequested;
@@ -41,6 +46,13 @@ public sealed class TrayIconService : IDisposable
     public event EventHandler? EnabledToggleRequested;
 
     public event EventHandler? ExitRequested;
+
+    public void ApplyLocalization()
+    {
+        _settingsItem.Text = _localization["Settings"];
+        _enabledItem.Text = _localization["Enabled"];
+        _exitItem.Text = _localization["Exit"];
+    }
 
     public void SetEnabled(bool enabled)
     {

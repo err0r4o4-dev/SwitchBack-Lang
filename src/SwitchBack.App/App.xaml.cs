@@ -16,6 +16,8 @@ public partial class App : System.Windows.Application
     private ConversionCoordinator? _conversionCoordinator;
     private JsonConfigService? _configService;
     private StartupService? _startupService;
+    private LocalizationService? _localization;
+    private WindowsInputLanguageService? _inputLanguageService;
     private AppSettings _settings = new();
     private bool _isExiting;
 
@@ -38,9 +40,18 @@ public partial class App : System.Windows.Application
         _configService = new JsonConfigService();
         _startupService = new StartupService();
         _settings = _configService.Load();
+        var installerLanguageApplied = ApplyInstallerLanguageArgument(_settings, e.Args);
+        _localization = new LocalizationService();
+        _localization.Apply(_settings.UiLanguage);
+        _inputLanguageService = new WindowsInputLanguageService();
+        EnsureDefaultInputLayouts(_settings, _inputLanguageService.GetInstalledLayouts());
+        if (installerLanguageApplied)
+        {
+            _configService.Save(_settings);
+        }
 
         _hotkeyService = new GlobalHotkeyService();
-        _mainWindow = new MainWindow
+        _mainWindow = new MainWindow(_localization, _inputLanguageService)
         {
             SaveSettings = ApplySettings
         };
@@ -50,19 +61,23 @@ public partial class App : System.Windows.Application
         var converter = new TextConverter(new KeyboardMapper(), new LanguageDetector());
         _conversionCoordinator = new ConversionCoordinator(
             converter,
+            new MixedLayoutTextConverter(),
+            _inputLanguageService,
             new ClipboardService(),
             new KeyboardInputService());
 
-        _trayIcon = new TrayIconService();
+        _trayIcon = new TrayIconService(_localization);
         _trayIcon.ShowSettingsRequested += (_, _) => ShowSettings();
         _trayIcon.EnabledToggleRequested += (_, _) => ToggleEnabled();
         _trayIcon.ExitRequested += (_, _) => ExitApplication();
-        _conversionCoordinator.Error += (_, message) => _trayIcon.ShowMessage("Conversion failed", message, isError: true);
+        _conversionCoordinator.Error += (_, message) => _trayIcon.ShowMessage(_localization["ConversionFailed"], message, isError: true);
         _conversionCoordinator.Converted += (_, result) =>
         {
             if (_settings.Preferences.ShowNotifications)
             {
-                _trayIcon.ShowMessage("Text converted", $"{result.ConvertedCharacterCount} characters converted.");
+                _trayIcon.ShowMessage(
+                    _localization["TextConverted"],
+                    string.Format(_localization["CharactersConverted"], result.ConvertedCharacterCount));
             }
         };
 
@@ -71,7 +86,7 @@ public partial class App : System.Windows.Application
         var startupError = ApplySettings(_settings, persist: false);
         if (startupError is not null)
         {
-            _trayIcon.ShowMessage("SwitchBack needs attention", startupError, isError: true);
+            _trayIcon.ShowMessage(_localization["NeedsAttention"], startupError, isError: true);
         }
 
         _trayIcon.SetEnabled(_settings.Enabled);
@@ -96,15 +111,27 @@ public partial class App : System.Windows.Application
 
     private string? ApplySettings(AppSettings newSettings, bool persist)
     {
-        if (_mainWindow is null || _hotkeyService is null || _configService is null || _startupService is null)
+        if (_mainWindow is null || _hotkeyService is null || _configService is null ||
+            _startupService is null || _localization is null || _inputLanguageService is null)
         {
-            return "Application services are not ready.";
+            return _localization?["ServicesNotReady"] ?? "Application services are not ready.";
         }
 
         if (!newSettings.Hotkey.Control && !newSettings.Hotkey.Shift &&
             !newSettings.Hotkey.Alt && !newSettings.Hotkey.Windows)
         {
-            return "Choose at least one modifier key (Ctrl, Shift, Alt, or Win).";
+            return _localization["SelectModifiers"];
+        }
+
+        if (newSettings.ConversionMode == ConversionMode.FollowWindowsLanguage)
+        {
+            var layoutA = _inputLanguageService.FindById(newSettings.InputLayouts.LayoutAId);
+            var layoutB = _inputLanguageService.FindById(newSettings.InputLayouts.LayoutBId);
+            if (layoutA is null || layoutB is null || !layoutA.IsSupported || !layoutB.IsSupported ||
+                string.Equals(layoutA.Id, layoutB.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                return _localization["SelectTwoLayouts"];
+            }
         }
 
         var previousSettings = _settings.Clone();
@@ -127,12 +154,15 @@ public partial class App : System.Windows.Application
             }
 
             _settings = newSettings.Clone();
+            _localization.Apply(_settings.UiLanguage);
             if (persist)
             {
                 _configService.Save(_settings);
             }
 
             _trayIcon?.SetEnabled(_settings.Enabled);
+            _trayIcon?.ApplyLocalization();
+            _mainWindow.ApplyLocalization();
             return null;
         }
         catch (Exception exception) when (exception is ArgumentException or IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
@@ -174,7 +204,7 @@ public partial class App : System.Windows.Application
 
         if (error is not null)
         {
-            _trayIcon?.ShowMessage("Could not change status", error, isError: true);
+            _trayIcon?.ShowMessage(_localization?["CouldNotChangeStatus"] ?? "Could not change status", error, isError: true);
         }
 
         _mainWindow?.LoadSettings(_settings);
@@ -213,5 +243,67 @@ public partial class App : System.Windows.Application
         _trayIcon?.Dispose();
         _singleInstanceMutex?.Dispose();
         base.OnExit(e);
+    }
+
+    private static void EnsureDefaultInputLayouts(
+        AppSettings settings,
+        IReadOnlyList<InputLayoutInfo> installedLayouts)
+    {
+        var supported = installedLayouts.Where(layout => layout.IsSupported).ToArray();
+        var existingA = supported.FirstOrDefault(layout =>
+            string.Equals(layout.Id, settings.InputLayouts.LayoutAId, StringComparison.OrdinalIgnoreCase));
+        var existingB = supported.FirstOrDefault(layout =>
+            string.Equals(layout.Id, settings.InputLayouts.LayoutBId, StringComparison.OrdinalIgnoreCase));
+
+        if (existingA is not null && existingB is not null && existingA.Id != existingB.Id)
+        {
+            return;
+        }
+
+        var english = supported.FirstOrDefault(layout => layout.LanguageTag.StartsWith("en", StringComparison.OrdinalIgnoreCase));
+        var thai = supported.FirstOrDefault(layout => layout.LanguageTag.StartsWith("th", StringComparison.OrdinalIgnoreCase));
+
+        if (english is not null && thai is not null)
+        {
+            settings.InputLayouts.LayoutAId = english.Id;
+            settings.InputLayouts.LayoutBId = thai.Id;
+            return;
+        }
+
+        if (supported.Length >= 2)
+        {
+            settings.InputLayouts.LayoutAId = supported[0].Id;
+            settings.InputLayouts.LayoutBId = supported[1].Id;
+            return;
+        }
+
+        settings.InputLayouts.LayoutAId = supported.FirstOrDefault()?.Id ?? string.Empty;
+        settings.InputLayouts.LayoutBId = string.Empty;
+        if (settings.ConversionMode == ConversionMode.FollowWindowsLanguage)
+        {
+            settings.Enabled = false;
+        }
+    }
+
+    private static bool ApplyInstallerLanguageArgument(AppSettings settings, IReadOnlyList<string> arguments)
+    {
+        var languageArgument = arguments.FirstOrDefault(argument =>
+            argument.StartsWith("--ui-language=", StringComparison.OrdinalIgnoreCase));
+        var language = languageArgument?.Split('=', 2).ElementAtOrDefault(1);
+
+        var selectedLanguage = language?.ToLowerInvariant() switch
+        {
+            "thai" => UiLanguageMode.Thai,
+            "english" => UiLanguageMode.English,
+            _ => (UiLanguageMode?)null
+        };
+
+        if (selectedLanguage is null)
+        {
+            return false;
+        }
+
+        settings.UiLanguage = selectedLanguage.Value;
+        return true;
     }
 }

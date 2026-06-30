@@ -27,6 +27,12 @@ jobs:
           dotnet restore SwitchBack.sln
           dotnet test SwitchBack.sln -c Release --no-restore
 
+      - name: Test x86 Win32 ABI
+        shell: pwsh
+        run: |
+          $env:SWITCHBACK_EXPECT_X86 = "1"
+          dotnet test tests/SwitchBack.Tests/SwitchBack.Tests.csproj -c Release -r win-x86 -p:SelfContained=true
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y

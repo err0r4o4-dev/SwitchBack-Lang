@@ -2,48 +2,59 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="SwitchBack Settings"
-        Width="620"
-        Height="650"
-        MinWidth="540"
-        MinHeight="580"
+        Width="680"
+        Height="820"
+        MinWidth="580"
+        MinHeight="650"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="True">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="28">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <StackPanel Margin="28">
+            <TextBlock FontSize="30" FontWeight="SemiBold" Text="SwitchBack" />
+            <TextBlock x:Name="SubtitleTextBlock" Margin="0,4,0,18" Foreground="#666666" />
 
-            <StackPanel Grid.Row="0">
-                <TextBlock FontSize="30" FontWeight="SemiBold" Text="SwitchBack" />
-                <TextBlock Margin="0,4,0,18"
-                           Foreground="#666666"
-                           Text="Fix text typed with the wrong Thai/English keyboard layout." />
-            </StackPanel>
+            <GroupBox x:Name="InterfaceLanguageGroup" Margin="0,0,0,14" Padding="14">
+                <ComboBox x:Name="UiLanguageComboBox" Width="260" HorizontalAlignment="Left" />
+            </GroupBox>
 
-            <GroupBox Grid.Row="1" Header="Status" Margin="0,0,0,14" Padding="14">
+            <GroupBox x:Name="StatusGroup" Margin="0,0,0,14" Padding="14">
                 <StackPanel>
-                    <CheckBox x:Name="EnabledCheckBox" Content="Enable global text conversion" />
-                    <TextBlock Foreground="#666666" TextWrapping="Wrap"
-                               Text="Select text in any application, then press the hotkey. SwitchBack copies, converts, and pastes it back." />
+                    <CheckBox x:Name="EnabledCheckBox" />
+                    <TextBlock x:Name="UsageHintTextBlock" Foreground="#666666" TextWrapping="Wrap" />
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Grid.Row="2" Header="Conversion" Margin="0,0,0,14" Padding="14">
-                <StackPanel>
-                    <TextBlock Margin="0,0,0,6" Text="Direction" />
-                    <ComboBox x:Name="ConversionModeComboBox" MinWidth="220" HorizontalAlignment="Left" />
-                    <CheckBox x:Name="RestoreClipboardCheckBox"
-                              Content="Restore the previous Clipboard after conversion (recommended)" />
-                </StackPanel>
+            <GroupBox x:Name="ConversionGroup" Margin="0,0,0,14" Padding="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock x:Name="DirectionLabel" Grid.Row="0" Margin="0,8" />
+                    <ComboBox x:Name="ConversionModeComboBox" Grid.Row="0" Grid.Column="1" Margin="0,3" />
+
+                    <TextBlock x:Name="LayoutALabel" Grid.Row="1" Margin="0,8" />
+                    <ComboBox x:Name="LayoutAComboBox" Grid.Row="1" Grid.Column="1" Margin="0,3" />
+
+                    <TextBlock x:Name="LayoutBLabel" Grid.Row="2" Margin="0,8" />
+                    <ComboBox x:Name="LayoutBComboBox" Grid.Row="2" Grid.Column="1" Margin="0,3" />
+
+                    <TextBlock x:Name="MixedTextLabel" Grid.Row="3" Margin="0,8" />
+                    <ComboBox x:Name="MixedTextPolicyComboBox" Grid.Row="3" Grid.Column="1" Margin="0,3" />
+
+                    <CheckBox x:Name="RestoreClipboardCheckBox" Grid.Row="4" Grid.ColumnSpan="2" Margin="0,10,0,0" />
+                </Grid>
             </GroupBox>
 
-            <GroupBox Grid.Row="3" Header="Global hotkey" Margin="0,0,0,14" Padding="14">
+            <GroupBox x:Name="GlobalHotkeyGroup" Margin="0,0,0,14" Padding="14">
                 <StackPanel>
                     <WrapPanel>
                         <CheckBox x:Name="ControlCheckBox" Margin="0,7,16,7" Content="Ctrl" />
@@ -52,31 +63,29 @@
                         <CheckBox x:Name="WindowsCheckBox" Margin="0,7,16,7" Content="Win" />
                         <ComboBox x:Name="HotkeyComboBox" Width="120" Margin="0,2" />
                     </WrapPanel>
-                    <TextBlock Margin="0,8,0,0" Foreground="#666666" TextWrapping="Wrap"
-                               Text="Default: Ctrl + Shift + Space. If another application uses the same shortcut, SwitchBack will ask you to choose a different one." />
+                    <TextBlock x:Name="HotkeyHintTextBlock" Margin="0,8,0,0" Foreground="#666666" TextWrapping="Wrap" />
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Grid.Row="4" Header="Windows" Margin="0,0,0,14" Padding="14">
+            <GroupBox x:Name="WindowsGroup" Margin="0,0,0,14" Padding="14">
                 <StackPanel>
-                    <CheckBox x:Name="StartWithWindowsCheckBox" Content="Start SwitchBack with Windows" />
-                    <CheckBox x:Name="NotificationsCheckBox" Content="Show a notification after conversion" />
+                    <CheckBox x:Name="StartWithWindowsCheckBox" />
+                    <CheckBox x:Name="NotificationsCheckBox" />
                 </StackPanel>
             </GroupBox>
 
-            <StackPanel Grid.Row="5">
-                <Border Padding="12" Margin="0,0,0,12" Background="#EEF6FF" CornerRadius="4">
-                    <TextBlock TextWrapping="Wrap">
-                        <Run FontWeight="SemiBold" Text="Privacy: " />
-                        <Run Text="SwitchBack works 100% offline. Selected text is processed in memory and is never sent to a server. Conversion history is not stored in this MVP." />
-                    </TextBlock>
-                </Border>
-                <TextBlock x:Name="StatusTextBlock" Margin="4" Foreground="#B00020" TextWrapping="Wrap" />
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Click="HideButton_Click" Content="Hide to tray" />
-                    <Button Click="SaveButton_Click" Content="Save settings" IsDefault="True" />
-                </StackPanel>
+            <Border Padding="12" Margin="0,0,0,12" Background="#EEF6FF" CornerRadius="4">
+                <TextBlock TextWrapping="Wrap">
+                    <Run x:Name="PrivacyTitleRun" FontWeight="SemiBold" />
+                    <Run x:Name="PrivacyRun" />
+                </TextBlock>
+            </Border>
+
+            <TextBlock x:Name="StatusTextBlock" Margin="4" Foreground="#B00020" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="HideButton" Click="HideButton_Click" />
+                <Button x:Name="SaveButton" Click="SaveButton_Click" IsDefault="True" />
             </StackPanel>
-        </Grid>
+        </StackPanel>
     </ScrollViewer>
 </Window>

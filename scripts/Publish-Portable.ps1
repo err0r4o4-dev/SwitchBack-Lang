@@ -7,10 +7,12 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $project = Join-Path $root "src\SwitchBack.App\SwitchBack.App.csproj"
 $artifacts = Join-Path $root "artifacts"
-$publish = Join-Path $artifacts "publish"
+$publishRoot = Join-Path $artifacts "publish"
+$publish = Join-Path $publishRoot $Runtime
 $archive = Join-Path $artifacts "SwitchBack-$Runtime-portable.zip"
 
 New-Item -ItemType Directory -Path $artifacts -Force | Out-Null
+New-Item -ItemType Directory -Path $publish -Force | Out-Null
 
 dotnet publish $project `
     --configuration $Configuration `
