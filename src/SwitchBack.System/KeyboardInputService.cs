@@ -15,6 +15,8 @@ public sealed class KeyboardInputService
     private const uint InputKeyboard = 1;
     private const uint KeyEventKeyUp = 0x0002;
 
+    internal static int NativeInputSize => Marshal.SizeOf<Input>();
+
     public async Task WaitForHotkeyReleaseAsync(int triggerVirtualKey, CancellationToken cancellationToken = default)
     {
         var deadline = DateTime.UtcNow.AddSeconds(1);
@@ -50,7 +52,7 @@ public sealed class KeyboardInputService
             CreateKeyboardInput(VirtualKeyControl, keyUp: true)
         };
 
-        var sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Input>());
+        var sent = SendInput((uint)inputs.Length, inputs, NativeInputSize);
         if (sent != inputs.Length)
         {
             throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows could not simulate keyboard input.");
@@ -81,7 +83,26 @@ public sealed class KeyboardInputService
     private struct InputUnion
     {
         [FieldOffset(0)]
+        public MouseInput Mouse;
+
+        [FieldOffset(0)]
         public KeyboardInput Keyboard;
+
+        [FieldOffset(0)]
+        public HardwareInput Hardware;
+    }
+
+    // The unused MOUSEINPUT and HARDWAREINPUT members are required so the union
+    // has the exact native INPUT size (40 bytes on x64, 28 bytes on x86).
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MouseInput
+    {
+        public int X;
+        public int Y;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public UIntPtr ExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -92,6 +113,14 @@ public sealed class KeyboardInputService
         public uint Flags;
         public uint Time;
         public UIntPtr ExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct HardwareInput
+    {
+        public uint Message;
+        public ushort ParameterLow;
+        public ushort ParameterHigh;
     }
 
     [DllImport("user32.dll")]
