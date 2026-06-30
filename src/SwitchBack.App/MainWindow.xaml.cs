@@ -9,17 +9,12 @@ namespace SwitchBack.App;
 public partial class MainWindow : Window
 {
     private readonly LocalizationService _localization;
-    private readonly WindowsInputLanguageService _inputLanguageService;
     private AppSettings _settings = new();
-    private IReadOnlyList<InputLayoutInfo> _availableLayouts = Array.Empty<InputLayoutInfo>();
     private bool _closeForExit;
 
-    public MainWindow(
-        LocalizationService localization,
-        WindowsInputLanguageService inputLanguageService)
+    public MainWindow(LocalizationService localization)
     {
         _localization = localization;
-        _inputLanguageService = inputLanguageService;
 
         InitializeComponent();
         HotkeyComboBox.ItemsSource = BuildHotkeyChoices();
@@ -48,18 +43,12 @@ public partial class MainWindow : Window
     public void LoadSettings(AppSettings settings)
     {
         _settings = settings.Clone();
-        _availableLayouts = _inputLanguageService.GetInstalledLayouts();
-
         RefreshLocalizedOptions();
-        LayoutAComboBox.ItemsSource = _availableLayouts;
-        LayoutBComboBox.ItemsSource = _availableLayouts;
 
         EnabledCheckBox.IsChecked = settings.Enabled;
         SelectOption(UiLanguageComboBox, settings.UiLanguage);
         SelectOption(ConversionModeComboBox, settings.ConversionMode);
         SelectOption(MixedTextPolicyComboBox, settings.MixedTextPolicy);
-        LayoutAComboBox.SelectedItem = FindLayout(settings.InputLayouts.LayoutAId);
-        LayoutBComboBox.SelectedItem = FindLayout(settings.InputLayouts.LayoutBId);
         RestoreClipboardCheckBox.IsChecked = settings.RestoreClipboard;
         ControlCheckBox.IsChecked = settings.Hotkey.Control;
         ShiftCheckBox.IsChecked = settings.Hotkey.Shift;
@@ -75,24 +64,17 @@ public partial class MainWindow : Window
     {
         Title = _localization["WindowTitle"];
         SubtitleTextBlock.Text = _localization["Subtitle"];
-        InterfaceLanguageGroup.Header = _localization["InterfaceLanguage"];
-        StatusGroup.Header = _localization["Status"];
-        EnabledCheckBox.Content = _localization["EnableConversion"];
+        EnabledCheckBox.Content = _localization["Enabled"];
         UsageHintTextBlock.Text = _localization["UsageHint"];
-        ConversionGroup.Header = _localization["Conversion"];
-        DirectionLabel.Text = _localization["Direction"];
-        LayoutALabel.Text = _localization["LayoutA"];
-        LayoutBLabel.Text = _localization["LayoutB"];
+        ShortcutLabel.Text = _localization["Shortcut"];
+        InterfaceLanguageLabel.Text = _localization["InterfaceLanguage"];
+        AdvancedExpander.Header = _localization["Advanced"];
         MixedTextLabel.Text = _localization["MixedText"];
         RestoreClipboardCheckBox.Content = _localization["RestoreClipboard"];
-        GlobalHotkeyGroup.Header = _localization["GlobalHotkey"];
-        HotkeyHintTextBlock.Text = _localization["HotkeyHint"];
-        WindowsGroup.Header = _localization["Windows"];
         StartWithWindowsCheckBox.Content = _localization["StartWithWindows"];
         NotificationsCheckBox.Content = _localization["Notifications"];
         PrivacyTitleRun.Text = _localization["PrivacyTitle"];
         PrivacyRun.Text = _localization["Privacy"];
-        HideButton.Content = _localization["HideToTray"];
         SaveButton.Content = _localization["SaveSettings"];
         RefreshLocalizedOptions();
     }
@@ -119,10 +101,8 @@ public partial class MainWindow : Window
         var updated = _settings.Clone();
         updated.Enabled = EnabledCheckBox.IsChecked == true;
         updated.UiLanguage = SelectedValue(UiLanguageComboBox, UiLanguageMode.System);
-        updated.ConversionMode = SelectedValue(ConversionModeComboBox, ConversionMode.FollowWindowsLanguage);
+        updated.ConversionMode = ConversionMode.FollowWindowsLanguage;
         updated.MixedTextPolicy = SelectedValue(MixedTextPolicyComboBox, MixedTextPolicy.TargetLanguageOnly);
-        updated.InputLayouts.LayoutAId = (LayoutAComboBox.SelectedItem as InputLayoutInfo)?.Id ?? string.Empty;
-        updated.InputLayouts.LayoutBId = (LayoutBComboBox.SelectedItem as InputLayoutInfo)?.Id ?? string.Empty;
         updated.RestoreClipboard = RestoreClipboardCheckBox.IsChecked == true;
         updated.Hotkey.Control = ControlCheckBox.IsChecked == true;
         updated.Hotkey.Shift = ShiftCheckBox.IsChecked == true;
@@ -142,11 +122,10 @@ public partial class MainWindow : Window
 
         _settings = updated;
         ApplyLocalization();
-        StatusTextBlock.Foreground = System.Windows.Media.Brushes.SeaGreen;
+        StatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+            System.Windows.Media.Color.FromRgb(134, 239, 172));
         StatusTextBlock.Text = _localization["SettingsSaved"];
     }
-
-    private void HideButton_Click(object sender, RoutedEventArgs e) => Hide();
 
     private void RefreshLocalizedOptions()
     {
@@ -171,9 +150,6 @@ public partial class MainWindow : Window
         SelectOption(ConversionModeComboBox, selectedMode);
         SelectOption(MixedTextPolicyComboBox, selectedPolicy);
     }
-
-    private InputLayoutInfo? FindLayout(string id) => _availableLayouts.FirstOrDefault(
-        layout => string.Equals(layout.Id, id, StringComparison.OrdinalIgnoreCase));
 
     private static T SelectedValue<T>(System.Windows.Controls.ComboBox comboBox, T fallback)
         where T : struct, Enum => comboBox.SelectedItem is SelectionOption<T> option ? option.Value : fallback;

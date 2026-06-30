@@ -13,13 +13,6 @@ public sealed record InputLayoutInfo(
 
     public override string ToString()
     {
-        var capability = Capability switch
-        {
-            InputLayoutCapability.DirectKeyboard => "Generic",
-            InputLayoutCapability.InputMethodEditor => "IME / layout — limited",
-            _ => "Unknown"
-        };
-
-        return $"{DisplayName} ({LanguageTag}) — {capability}";
+        return $"{DisplayName} ({LanguageTag})";
     }
 }
