@@ -51,15 +51,16 @@ Create a self-contained x64 portable zip (the user does not need .NET installed)
 Create x86/x64 portable zips and the universal Inno Setup installer:
 
 ```powershell
-./scripts/Build-Installer.ps1 -Version 0.2.0
+./scripts/Build-Installer.ps1 -Version 0.2.1
 ```
 
-Artifacts are written to `artifacts/`. Pushing a tag such as `v0.2.0` runs the
+Artifacts are written to `artifacts/`. Pushing a tag such as `v0.2.1` runs the
 GitHub Release workflow.
 
 The installer automatically selects x86 or x64 binaries. Its language dialog
 defaults to the Windows display language. Complex IME-based input methods (for
-example Chinese/Japanese composition) are detected but are not position-mapped.
+example Chinese/Japanese composition) are marked as limited and only characters
+that Windows can map directly are converted.
 
 ## Documentation
 

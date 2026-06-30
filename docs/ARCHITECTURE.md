@@ -125,7 +125,8 @@ Example: `l ; y l f u 8 i y [` maps by position to `ส ว ั ส ด ี ค 
 The default mode reads the foreground thread's active Windows keyboard layout.
 Within the configured pair, the active layout becomes the target and the other
 layout becomes the source. `WindowsLayoutCharacterMapper` uses Windows' installed
-layout tables for generic direct-keyboard conversion. IME profiles are rejected.
+layout tables for generic direct-keyboard conversion. IME profiles are marked as
+limited and unsupported composition sequences are preserved rather than guessed.
 
 The legacy text detector counts Thai Unicode characters and English letters. More Thai
 selects Thai→English; otherwise English→Thai. This deterministic heuristic works
@@ -169,8 +170,8 @@ The workflow `.github/workflows/release.yml` runs tests, publishes the portable
 build, compiles the installer, and creates a release when a `v*` tag is pushed:
 
 ```powershell
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 Before a public release, add a custom icon, code-sign the executable/installer,

@@ -23,7 +23,7 @@ Start universal installer
   -> enumerate installed Windows input profiles
   -> prefer English + Thai when both exist
   -> otherwise choose the first two direct keyboard layouts
-  -> if fewer than two supported layouts exist, start paused
+  -> if fewer than two selectable layouts exist, start paused
 ```
 
 SwitchBack never installs Windows language packs or input methods. That can
@@ -59,8 +59,10 @@ Swap both layouts:    l;ylfu สวัสดี -> สวัสดี l;ylfu
   tests and a Windows-layout integration test.
 - Generic: direct Windows keyboard layouts are mapped with `VkKeyScanEx`,
   `MapVirtualKeyEx`, and `ToUnicodeEx` using the installed HKL handles.
-- Unsupported: profiles reported by Windows as IMEs are displayed in Settings
-  but cannot be selected for position mapping.
+- Limited: profiles reported by Windows as IMEs remain selectable because modern
+  Windows can report ordinary layouts through the IME subsystem. Only characters
+  that `VkKeyScanEx` and `ToUnicodeEx` can translate directly are converted;
+  composition sequences are preserved.
 
 Dead keys, AltGr, ligatures, and multi-character mappings are accepted only when
 Windows can translate them without changing keyboard state. Generic support is

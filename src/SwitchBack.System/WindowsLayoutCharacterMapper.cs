@@ -21,9 +21,9 @@ public sealed class WindowsLayoutCharacterMapper : ICharacterLayoutMapper
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _target = target ?? throw new ArgumentNullException(nameof(target));
 
-        if (!source.IsSupported || !target.IsSupported)
+        if (source.Handle == IntPtr.Zero || target.Handle == IntPtr.Zero)
         {
-            throw new NotSupportedException("IME-based input profiles are not supported by position mapping.");
+            throw new NotSupportedException("Windows did not provide a usable keyboard layout handle.");
         }
     }
 

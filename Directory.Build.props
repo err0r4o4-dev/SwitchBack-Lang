@@ -4,7 +4,7 @@
     <Company>err0r4o4-dev</Company>
     <Product>SwitchBack</Product>
     <Description>Offline Thai/English keyboard layout conversion utility for Windows.</Description>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.2.1</VersionPrefix>
     <RepositoryUrl>https://github.com/err0r4o4-dev/SwitchBack-Lang</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Deterministic>true</Deterministic>

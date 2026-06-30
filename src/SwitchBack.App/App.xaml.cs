@@ -39,16 +39,16 @@ public partial class App : System.Windows.Application
 
         _configService = new JsonConfigService();
         _startupService = new StartupService();
-        var hasExistingConfig = File.Exists(_configService.ConfigPath);
         _settings = _configService.Load();
-        if (!hasExistingConfig)
-        {
-            ApplyInstallerLanguageArgument(_settings, e.Args);
-        }
+        var installerLanguageApplied = ApplyInstallerLanguageArgument(_settings, e.Args);
         _localization = new LocalizationService();
         _localization.Apply(_settings.UiLanguage);
         _inputLanguageService = new WindowsInputLanguageService();
         EnsureDefaultInputLayouts(_settings, _inputLanguageService.GetInstalledLayouts());
+        if (installerLanguageApplied)
+        {
+            _configService.Save(_settings);
+        }
 
         _hotkeyService = new GlobalHotkeyService();
         _mainWindow = new MainWindow(_localization, _inputLanguageService)
@@ -285,17 +285,25 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private static void ApplyInstallerLanguageArgument(AppSettings settings, IReadOnlyList<string> arguments)
+    private static bool ApplyInstallerLanguageArgument(AppSettings settings, IReadOnlyList<string> arguments)
     {
         var languageArgument = arguments.FirstOrDefault(argument =>
             argument.StartsWith("--ui-language=", StringComparison.OrdinalIgnoreCase));
         var language = languageArgument?.Split('=', 2).ElementAtOrDefault(1);
 
-        settings.UiLanguage = language?.ToLowerInvariant() switch
+        var selectedLanguage = language?.ToLowerInvariant() switch
         {
             "thai" => UiLanguageMode.Thai,
             "english" => UiLanguageMode.English,
-            _ => settings.UiLanguage
+            _ => (UiLanguageMode?)null
         };
+
+        if (selectedLanguage is null)
+        {
+            return false;
+        }
+
+        settings.UiLanguage = selectedLanguage.Value;
+        return true;
     }
 }

@@ -9,14 +9,14 @@ public sealed record InputLayoutInfo(
 {
     public IntPtr Handle => new(HandleValue);
 
-    public bool IsSupported => Capability == InputLayoutCapability.DirectKeyboard;
+    public bool IsSupported => Capability is InputLayoutCapability.DirectKeyboard or InputLayoutCapability.InputMethodEditor;
 
     public override string ToString()
     {
         var capability = Capability switch
         {
             InputLayoutCapability.DirectKeyboard => "Generic",
-            InputLayoutCapability.InputMethodEditor => "IME — unsupported",
+            InputLayoutCapability.InputMethodEditor => "IME / layout — limited",
             _ => "Unknown"
         };
 
