@@ -51,7 +51,7 @@ public partial class App : System.Windows.Application
         }
 
         _hotkeyService = new GlobalHotkeyService();
-        _mainWindow = new MainWindow(_localization, _inputLanguageService)
+        _mainWindow = new MainWindow(_localization)
         {
             SaveSettings = ApplySettings
         };
@@ -121,17 +121,6 @@ public partial class App : System.Windows.Application
             !newSettings.Hotkey.Alt && !newSettings.Hotkey.Windows)
         {
             return _localization["SelectModifiers"];
-        }
-
-        if (newSettings.ConversionMode == ConversionMode.FollowWindowsLanguage)
-        {
-            var layoutA = _inputLanguageService.FindById(newSettings.InputLayouts.LayoutAId);
-            var layoutB = _inputLanguageService.FindById(newSettings.InputLayouts.LayoutBId);
-            if (layoutA is null || layoutB is null || !layoutA.IsSupported || !layoutB.IsSupported ||
-                string.Equals(layoutA.Id, layoutB.Id, StringComparison.OrdinalIgnoreCase))
-            {
-                return _localization["SelectTwoLayouts"];
-            }
         }
 
         var previousSettings = _settings.Clone();

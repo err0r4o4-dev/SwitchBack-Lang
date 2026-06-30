@@ -21,8 +21,7 @@ Start universal installer
   -> install the matching self-contained binary
   -> launch SwitchBack with the selected UI language
   -> enumerate installed Windows input profiles
-  -> prefer English + Thai when both exist
-  -> otherwise choose the first two direct keyboard layouts
+  -> choose source and target layouts automatically at conversion time
   -> if fewer than two selectable layouts exist, start paused
 ```
 
@@ -37,8 +36,9 @@ User selects text in the foreground application
   -> user switches Windows to the language they intended to type
   -> user presses the single global hotkey
   -> capture the foreground thread's active keyboard layout
-  -> resolve it against configured layout A/B
-  -> active layout becomes target; the other layout becomes source
+  -> active layout becomes the target
+  -> test installed layouts as source candidates
+  -> choose the candidate that produces the strongest valid conversion
   -> copy selected text
   -> map source characters by physical key position into target layout
   -> apply mixed-text policy

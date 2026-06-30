@@ -1,5 +1,5 @@
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.1"
+  #define MyAppVersion "0.3.0"
 #endif
 
 #define MyAppName "SwitchBack"
@@ -19,6 +19,7 @@ OutputBaseFilename=SwitchBack-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\src\SwitchBack.App\Assets\SwitchBack.ico
 PrivilegesRequired=lowest
 LanguageDetectionMethod=uilanguage
 ShowLanguageDialog=yes

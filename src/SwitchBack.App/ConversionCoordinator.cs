@@ -96,45 +96,65 @@ public sealed class ConversionCoordinator
         InputLayoutInfo? foregroundLayout,
         AppSettings settings)
     {
-        var layoutA = _inputLanguageService.FindById(settings.InputLayouts.LayoutAId);
-        var layoutB = _inputLanguageService.FindById(settings.InputLayouts.LayoutBId);
-
-        if (layoutA is null || layoutB is null)
-        {
-            throw new InvalidOperationException("The configured keyboard layouts are no longer installed in Windows.");
-        }
-
         if (foregroundLayout is null)
         {
             throw new InvalidOperationException("Windows did not report the active keyboard language.");
         }
 
-        InputLayoutInfo source;
-        InputLayoutInfo target;
-
-        if (string.Equals(foregroundLayout.Id, layoutA.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            source = layoutB;
-            target = layoutA;
-        }
-        else if (string.Equals(foregroundLayout.Id, layoutB.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            source = layoutA;
-            target = layoutB;
-        }
-        else
-        {
-            throw new InvalidOperationException(
-                $"The active Windows language ({foregroundLayout.LanguageTag}) is not in the configured conversion pair.");
-        }
-
-        var sourceToTarget = new WindowsLayoutCharacterMapper(source, target);
-        var targetToSource = new WindowsLayoutCharacterMapper(target, source);
         var behavior = settings.MixedTextPolicy == MixedTextPolicy.SwapBothLayouts
             ? LayoutConversionBehavior.SwapBothLayouts
             : LayoutConversionBehavior.TargetLanguageOnly;
-        var result = _mixedTextConverter.Convert(input, sourceToTarget, targetToSource, behavior);
-        return (result.Output, result.ConvertedCharacterCount);
+
+        var candidates = OrderSourceCandidates(
+            _inputLanguageService.GetInstalledLayouts(),
+            foregroundLayout,
+            settings.InputLayouts);
+        LayoutConversionResult? bestResult = null;
+
+        foreach (var source in candidates)
+        {
+            try
+            {
+                var sourceToTarget = new WindowsLayoutCharacterMapper(source, foregroundLayout);
+                var targetToSource = new WindowsLayoutCharacterMapper(foregroundLayout, source);
+                var result = _mixedTextConverter.Convert(input, sourceToTarget, targetToSource, behavior);
+
+                if (bestResult is null || result.ConvertedCharacterCount > bestResult.ConvertedCharacterCount)
+                {
+                    bestResult = result;
+                }
+            }
+            catch (NotSupportedException)
+            {
+            }
+        }
+
+        if (bestResult is null)
+        {
+            throw new InvalidOperationException("No compatible Windows keyboard layout was found.");
+        }
+
+        return (bestResult.Output, bestResult.ConvertedCharacterCount);
+    }
+
+    private static IReadOnlyList<InputLayoutInfo> OrderSourceCandidates(
+        IReadOnlyList<InputLayoutInfo> installedLayouts,
+        InputLayoutInfo target,
+        InputLayoutSettings preferredPair)
+    {
+        var preferredSourceId = string.Equals(target.Id, preferredPair.LayoutAId, StringComparison.OrdinalIgnoreCase)
+            ? preferredPair.LayoutBId
+            : string.Equals(target.Id, preferredPair.LayoutBId, StringComparison.OrdinalIgnoreCase)
+                ? preferredPair.LayoutAId
+                : string.Empty;
+
+        return installedLayouts
+            .Where(layout => layout.IsSupported &&
+                !string.Equals(layout.Id, target.Id, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(layout =>
+                string.Equals(layout.Id, preferredSourceId, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(layout => layout.LanguageTag.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
     }
 
     private (string Output, int Count) ConvertUsingBuiltInMapping(string input, ConversionMode mode)

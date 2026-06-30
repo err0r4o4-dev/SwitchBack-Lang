@@ -170,8 +170,8 @@ The workflow `.github/workflows/release.yml` runs tests, publishes the portable
 build, compiles the installer, and creates a release when a `v*` tag is pushed:
 
 ```powershell
-git tag v0.2.1
-git push origin v0.2.1
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 Before a public release, add a custom icon, code-sign the executable/installer,
