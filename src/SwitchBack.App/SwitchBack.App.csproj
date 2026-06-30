@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>SwitchBack</AssemblyName>
+    <ApplicationIcon Condition="Exists('Assets\SwitchBack.ico')">Assets\SwitchBack.ico</ApplicationIcon>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SwitchBack.Core\SwitchBack.Core.csproj" />
+    <ProjectReference Include="..\SwitchBack.Config\SwitchBack.Config.csproj" />
+    <ProjectReference Include="..\SwitchBack.System\SwitchBack.System.csproj" />
+  </ItemGroup>
+
+</Project>

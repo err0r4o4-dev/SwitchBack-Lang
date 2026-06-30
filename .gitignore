@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+
+# IDE and user state
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local tooling/cache
+.dotnet-home/
+.nuget/
+
+# Installer output
+installer/Output/
+
+# OS files
+Thumbs.db
+.DS_Store
